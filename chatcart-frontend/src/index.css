@@ -1,0 +1,251 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+/* ─── Design Tokens ──────────────────────────────────────────────────────── */
+:root {
+  --brand-primary:   #7c3aed;
+  --brand-secondary: #4f46e5;
+  --brand-accent:    #a855f7;
+  --brand-dark:      #5b21b6;
+  --wa-green:        #25D366;
+  --wa-dark:         #128C7E;
+
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+  --radius-2xl: 24px;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+  --shadow-card-hover: 0 8px 32px rgba(124,58,237,.15), 0 2px 8px rgba(0,0,0,.08);
+  --shadow-button: 0 4px 14px rgba(124,58,237,.35);
+}
+
+/* ─── Base reset ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f5f4f8;
+  color: #111827;
+  line-height: 1.5;
+}
+
+/* ─── Scrollbars ──────────────────────────────────────────────────────────── */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d8b4fe; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #a855f7; }
+
+/* ─── Typography helpers ──────────────────────────────────────────────────── */
+.line-clamp-1 {
+  display: -webkit-box; -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.line-clamp-2 {
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box; -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ─── Global animation config ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-in {
+    animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position:  400px 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #f0edf8 25%, #e8e3f5 50%, #f0edf8 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.6s infinite linear;
+    border-radius: var(--radius-md);
+  }
+}
+
+/* ─── Reusable component classes ──────────────────────────────────────────── */
+
+/* Cards */
+.cc-card {
+  background: #fff;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(0,0,0,.05);
+  transition: box-shadow .2s, transform .2s;
+}
+.cc-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+/* Buttons */
+.cc-btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: #fff; font-weight: 700; font-size: 14px;
+  padding: 10px 20px; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-button);
+  transition: all .2s; border: none; cursor: pointer;
+}
+.cc-btn-primary:hover {
+  background: linear-gradient(135deg, var(--brand-dark), var(--brand-primary));
+  box-shadow: 0 6px 20px rgba(124,58,237,.45);
+  transform: translateY(-1px);
+}
+.cc-btn-primary:active { transform: translateY(0); }
+
+.cc-btn-wa {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--wa-green);
+  color: #fff; font-weight: 700; font-size: 14px;
+  padding: 11px 20px; border-radius: var(--radius-lg);
+  box-shadow: 0 4px 14px rgba(37,211,102,.35);
+  transition: all .2s; border: none; cursor: pointer;
+}
+.cc-btn-wa:hover {
+  background: var(--wa-dark);
+  box-shadow: 0 6px 20px rgba(37,211,102,.45);
+  transform: translateY(-1px);
+}
+
+.cc-btn-outline {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: transparent; color: var(--brand-primary);
+  font-weight: 600; font-size: 14px;
+  padding: 10px 20px; border-radius: var(--radius-lg);
+  border: 1.5px solid var(--brand-primary);
+  transition: all .2s; cursor: pointer;
+}
+.cc-btn-outline:hover { background: rgba(124,58,237,.06); }
+
+/* Inputs */
+.cc-input {
+  width: 100%; background: #f9f7ff;
+  border: 1.5px solid #e5e1f5;
+  border-radius: var(--radius-lg);
+  padding: 10px 14px;
+  font-size: 14px; color: #111827;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+.cc-input:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(124,58,237,.12);
+  background: #fff;
+}
+.cc-input::placeholder { color: #a78bcc; }
+
+/* Badges */
+.cc-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; letter-spacing: .3px;
+  padding: 3px 8px; border-radius: 99px;
+}
+.cc-badge-purple { background: #ede9fe; color: #6d28d9; }
+.cc-badge-green  { background: #dcfce7; color: #15803d; }
+.cc-badge-blue   { background: #dbeafe; color: #1d4ed8; }
+.cc-badge-orange { background: #ffedd5; color: #c2410c; }
+.cc-badge-red    { background: #fee2e2; color: #b91c1c; }
+.cc-badge-gray   { background: #f3f4f6; color: #4b5563; }
+
+/* Section headers */
+.cc-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.cc-section-title {
+  font-size: 20px; font-weight: 800; color: #111827; letter-spacing: -.3px;
+}
+
+/* Page wrapper */
+.cc-page { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 640px) { .cc-page { padding: 0 24px; } }
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(255,255,255,.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.3);
+}
+
+/* ─── Admin dark theme helpers ────────────────────────────────────────────── */
+.admin-card {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: var(--radius-xl);
+  transition: border-color .2s, box-shadow .2s;
+}
+.admin-card:hover {
+  border-color: #374151;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+
+.admin-input {
+  background: #1f2937; border: 1px solid #374151;
+  border-radius: var(--radius-lg); color: #f9fafb;
+  padding: 8px 12px; font-size: 13px; outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.admin-input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.2); }
+
+/* ─── WA icon inline helper ───────────────────────────────────────────────── */
+.wa-icon { fill: currentColor; }
+
+/* ─── Bottom nav safe area ────────────────────────────────────────────────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-bottom-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+  }
+}
+
+/* ─── Page transitions ────────────────────────────────────────────────────── */
+.page-enter { animation: pageEnter .25s cubic-bezier(0.16,1,.3,1) both; }
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Pulse dot ───────────────────────────────────────────────────────────── */
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .5; transform: scale(1.4); }
+}
+.pulse-dot { animation: pulseDot 1.8s ease-in-out infinite; }
+
+/* ─── Floating animation for hero elements ────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+.float { animation: float 4s ease-in-out infinite; }
