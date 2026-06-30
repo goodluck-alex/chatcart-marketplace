@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Upload, Plus } from "lucide-react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { ArrowLeft, ArrowRight, Check, Plus, Sparkles, Camera } from "lucide-react";
 import { plans } from "../data/listings";
+import { buildAiSuggestions, createOptimizedImageAsset, generatePromoCopies, type OptimizedImage } from "../lib/assistant";
+import { useCreateListing } from "../lib/hooks";
 
 interface Props {
   onNavigate: (page: string) => void;
@@ -57,6 +59,11 @@ export default function SellPage({ onNavigate }: Props) {
     storeName: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [images, setImages] = useState<OptimizedImage[]>([]);
+  const [aiSuggestion, setAiSuggestion] = useState(buildAiSuggestions({}));
+  const [currency, setCurrency] = useState("UGX");
+  const [promoCopy, setPromoCopy] = useState(generatePromoCopies({ title: "Your listing", city: "your area" }));
+  const createListing = useCreateListing();
 
   const handleNext = () => {
     if (step < 4) setStep(step + 1);
@@ -72,6 +79,47 @@ export default function SellPage({ onNavigate }: Props) {
     if (step === 2) return !!selectedPlan;
     if (step === 3) return formData.title && formData.price && formData.location;
     return true;
+  };
+
+  useEffect(() => {
+    const suggestion = buildAiSuggestions({
+      title: formData.title,
+      description: formData.description,
+      category: selectedType || undefined,
+      location: { city: formData.location || undefined, country: "UG" },
+      imageCount: images.length,
+    });
+    setAiSuggestion(suggestion);
+    setPromoCopy(generatePromoCopies({ title: suggestion.title, city: formData.location || 'your area', currency, price: Number(formData.price || 0) }));
+  }, [formData.title, formData.description, formData.location, formData.price, images.length, selectedType, currency]);
+
+  const handleImageSelection = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    const processed = await Promise.all(files.map(createOptimizedImageAsset));
+    setImages(prev => [...prev, ...processed]);
+  };
+
+  const visibleSuggestions = useMemo(() => [
+    { label: "Title", value: aiSuggestion.title },
+    { label: "Category", value: aiSuggestion.category },
+    { label: "Description", value: aiSuggestion.description },
+    { label: "Tags", value: aiSuggestion.tags.join(", ") },
+    aiSuggestion.brand ? { label: "Brand", value: aiSuggestion.brand } : null,
+  ].filter(Boolean), [aiSuggestion]);
+
+  const handlePublish = () => {
+    const fd = new FormData();
+    fd.append("title", formData.title || aiSuggestion.title);
+    fd.append("description", formData.description || aiSuggestion.description);
+    fd.append("price", formData.price || "0");
+    fd.append("currency", currency);
+    fd.append("category", selectedType);
+    fd.append("location", JSON.stringify({ city: formData.location, country: "UG", displayAddress: formData.location }));
+    fd.append("tags", aiSuggestion.tags.join(","));
+    fd.append("attributes", JSON.stringify({ aiSuggestedCategory: aiSuggestion.category, aiSuggestedBrand: aiSuggestion.brand || "", promoCopy }));
+    images.forEach(image => fd.append("images", image.file));
+    createListing.mutate(fd, { onSuccess: () => setSubmitted(true) });
   };
 
   if (submitted) {
@@ -222,18 +270,32 @@ export default function SellPage({ onNavigate }: Props) {
         <div className="space-y-4">
           {/* Image upload */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Photos</label>
-            <div className="grid grid-cols-4 gap-2">
-              <div className="aspect-square border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all col-span-2 row-span-2">
-                <Upload className="w-6 h-6 text-gray-400 mb-1" />
-                <span className="text-xs text-gray-400">Main Photo</span>
-              </div>
-              {[1, 2, 3, 4].map(i => (
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-bold text-gray-700">Photos</label>
+              <span className="text-xs text-gray-500">Camera • Gallery • Files</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <label className="aspect-square border-2 border-dashed border-purple-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all col-span-2 row-span-2 bg-purple-50/60">
+                <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageSelection} />
+                <Camera className="w-6 h-6 text-purple-500 mb-1" />
+                <span className="text-xs font-semibold text-purple-600">Upload / Capture</span>
+                <span className="text-[10px] text-purple-500 mt-1">{images.length ? `${images.length} ready` : 'Add images'}</span>
+              </label>
+              {images.length ? images.map((image, index) => (
+                <div key={image.id} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
+                  <img src={image.previewUrl} alt={image.name} className="w-full h-full object-cover" />
+                  <button type="button" onClick={() => setImages(prev => prev.filter(item => item.id !== image.id))} className="absolute top-1 right-1 bg-white/90 rounded-full px-1.5 py-0.5 text-[10px] font-bold">✕</button>
+                  <div className="absolute bottom-1 left-1 bg-black/70 text-[10px] text-white px-1.5 py-0.5 rounded">{index + 1}</div>
+                </div>
+              )) : [1, 2, 3].map(i => (
                 <div key={i} className="aspect-square border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-all">
                   <Plus className="w-5 h-5 text-gray-300" />
                 </div>
               ))}
             </div>
+            {images.length > 1 && (
+              <div className="mt-2 text-xs text-gray-500">Tip: reorder by tapping the image badges and publish after cropping or compressing.</div>
+            )}
           </div>
 
           <div>
@@ -245,6 +307,10 @@ export default function SellPage({ onNavigate }: Props) {
               placeholder="e.g. MacBook Pro M2 2022"
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
+            <div className="mt-2 flex items-center gap-2 text-xs text-purple-600 bg-purple-50 rounded-lg px-3 py-2">
+              <Sparkles className="w-3.5 h-3.5" />
+              AI suggestion: <span className="font-semibold">{aiSuggestion.title}</span>
+            </div>
           </div>
 
           <div>
@@ -256,6 +322,7 @@ export default function SellPage({ onNavigate }: Props) {
               rows={4}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
             />
+            <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded-lg p-3">{aiSuggestion.description}</div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -321,6 +388,26 @@ export default function SellPage({ onNavigate }: Props) {
                 placeholder="7XX XXX XXX"
                 className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
               />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-purple-100 bg-purple-50/70 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              <h3 className="text-sm font-bold text-purple-800">AI auto-promotion</h3>
+            </div>
+            <p className="text-xs text-purple-700 mb-3">Your listing can be shared instantly on WhatsApp, Facebook, Instagram, X, and Telegram.</p>
+            <div className="rounded-xl bg-white p-3 text-xs text-gray-700 space-y-2">
+              <div className="font-semibold">Caption</div>
+              <div>{promoCopy.caption}</div>
+            </div>
+            <div className="mt-3 rounded-xl bg-white p-3 text-xs text-gray-700">
+              <div className="font-semibold mb-1">Suggested details</div>
+              <ul className="space-y-1">
+                {visibleSuggestions.map(item => (
+                  <li key={item.label} className="flex gap-2"><span className="text-gray-400">{item.label}:</span><span className="font-medium text-gray-700">{item.value}</span></li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
@@ -400,15 +487,15 @@ export default function SellPage({ onNavigate }: Props) {
             </button>
           )}
           <button
-            onClick={handleNext}
-            disabled={!canNext()}
+            onClick={step === 4 ? handlePublish : handleNext}
+            disabled={!canNext() || createListing.isPending}
             className={`flex-1 flex items-center justify-center gap-2 font-bold py-3.5 rounded-2xl transition-all ${
-              canNext()
+              canNext() && !createListing.isPending
                 ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:shadow-lg hover:shadow-purple-200"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >
-            {step === 4 ? "Publish Listing 🚀" : "Continue"}
+            {step === 4 ? (createListing.isPending ? "Publishing..." : "Publish Listing 🚀") : "Continue"}
             {step < 4 && <ArrowRight className="w-4 h-4" />}
           </button>
         </div>

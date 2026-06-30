@@ -26,14 +26,29 @@ export class ListingsController {
     @Query('sortBy') sortBy?: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
+    @Query('lat') lat?: number,
+    @Query('lng') lng?: number,
+    @Query('radiusKm') radiusKm?: number,
   ) {
-    return this.svc.findAll({ category, query, city, minPrice, maxPrice, sellerVerified, isFeatured, sortBy, page, limit });
+    return this.svc.findAll({ category, query, city, minPrice, maxPrice, sellerVerified, isFeatured, sortBy, page, limit, lat, lng, radiusKm });
   }
 
   @Get('featured')
   @ApiOperation({ summary: 'Get featured listings' })
   getFeatured(@Query('limit') limit?: number) {
     return this.svc.getFeatured(limit);
+  }
+
+  @Get('nearby')
+  @ApiOperation({ summary: 'Get nearby listings' })
+  getNearby(@Query('lat') lat: number, @Query('lng') lng: number, @Query('radiusKm') radiusKm = 20, @Query('limit') limit = 12) {
+    return this.svc.getNearby(lat, lng, radiusKm, limit);
+  }
+
+  @Get('recommendations')
+  @ApiOperation({ summary: 'Get smart recommendations for a buyer' })
+  getRecommendations(@Query('city') city?: string, @Query('category') category?: string, @Query('query') query?: string, @Query('limit') limit = 6) {
+    return this.svc.getRecommendations(undefined, { city, category, query }, Number(limit));
   }
 
   @Get('mine')

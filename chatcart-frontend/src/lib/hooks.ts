@@ -23,7 +23,7 @@ import { useAuthStore } from "./store";
 //  3. Change below:   USE_MOCK = false
 //  4. Restart dev:    npm run dev
 // ─────────────────────────────────────────────────────────────────────────────
-const USE_MOCK = true;
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 
 // ─── Listings ─────────────────────────────────────────────────────────────────
 export function useListings(filters: ListingFilters = {}) {
@@ -87,8 +87,31 @@ export function useFeaturedListings(limit = 8) {
         await delay(300);
         return mockListings.filter(l => l.isFeatured).slice(0, limit);
       }
-      const res = await listingsApi.getFeatured(limit);
-      return res.data.data;
+      try {
+        const res = await listingsApi.getFeatured(limit);
+        return res.data.data;
+      } catch {
+        return mockListings.filter(l => l.isFeatured).slice(0, limit);
+      }
+    },
+    staleTime: 120_000,
+  });
+}
+
+export function useRecommendations(filters: { city?: string; category?: string; query?: string; limit?: number } = {}) {
+  return useQuery({
+    queryKey: ["listings", "recommendations", filters],
+    queryFn: async () => {
+      if (USE_MOCK) {
+        await delay(300);
+        return mockListings.slice(0, filters.limit ?? 6);
+      }
+      try {
+        const res = await listingsApi.getRecommendations(filters);
+        return res.data.data;
+      } catch {
+        return mockListings.slice(0, filters.limit ?? 6);
+      }
     },
     staleTime: 120_000,
   });

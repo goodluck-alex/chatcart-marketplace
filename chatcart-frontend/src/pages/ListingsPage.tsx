@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { SlidersHorizontal, X, Search } from "lucide-react";
-import { useListings } from "../lib/hooks";
+import { useListings, useRecommendations } from "../lib/hooks";
 import type { Category } from "../lib/types";
 import ListingCard from "../components/ListingCard";
 
@@ -43,6 +43,12 @@ export default function ListingsPage({ onNavigate, searchQuery }: Props) {
     sortBy,
     page,
     limit: 16,
+  });
+  const { data: recommendedData, isLoading: recommendedLoading } = useRecommendations({
+    category:        category === "all" ? undefined : category as Category,
+    query:           localSearch || searchQuery || undefined,
+    city:            selectedLocation === "all" ? undefined : selectedLocation,
+    limit: 4,
   });
 
   const clearFilters = () => {
@@ -158,6 +164,37 @@ export default function ListingsPage({ onNavigate, searchQuery }: Props) {
           </div>
         </div>
       )}
+
+      {!isLoading && data?.items.length ? (
+        <div className="mb-4 rounded-2xl border border-purple-100 bg-gradient-to-r from-purple-50 to-white p-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-black text-gray-900">Smart recommendations are on</p>
+            <p className="text-xs text-gray-500">We’re highlighting fresh, local, and highly viewed listings for this search.</p>
+          </div>
+          <div className="text-xs font-semibold text-purple-600 bg-white px-3 py-1.5 rounded-full border border-purple-100">{selectedLocation === "all" ? "Broad match" : `${selectedLocation} focused`}</div>
+        </div>
+      ) : null}
+
+      {!isLoading && recommendedData?.length ? (
+        <div className="mb-6 rounded-3xl border border-gray-200 bg-white p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-sm font-black text-gray-900">Recommended for you</p>
+              <p className="text-xs text-gray-500">Based on your current search and location context.</p>
+            </div>
+            <div className="text-[11px] font-semibold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">Smart picks</div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {(recommendedLoading ? Array.from({ length: 4 }) : recommendedData).map((listing, index) => (
+              <div key={listing?.id ?? index} className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
+                <div className="text-[11px] font-semibold text-gray-500 mb-1">{listing?.category ?? "Listing"}</div>
+                <div className="font-semibold text-sm text-gray-800 line-clamp-2">{listing?.title ?? "Loading..."}</div>
+                <div className="text-xs text-gray-500 mt-1">UGX {listing?.price?.toLocaleString() ?? "—"}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {/* Results */}
       {isLoading ? (

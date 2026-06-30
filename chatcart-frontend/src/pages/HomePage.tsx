@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronRight, TrendingUp, ArrowRight, Star } from "lucide-react";
-import { useListings, useFeaturedListings } from "../lib/hooks";
+import { useListings, useFeaturedListings, useRecommendations } from "../lib/hooks";
 import ListingCard from "../components/ListingCard";
 import type { Category } from "../lib/types";
 
@@ -26,6 +26,22 @@ export default function HomePage({ onNavigate, searchQuery }: Props) {
     category: activeCat === "all" ? undefined : activeCat as Category,
     query: searchQuery || undefined,
     limit: 8, sortBy: "popular",
+  });
+  const { data: freshData, isLoading: freshLoading } = useRecommendations({
+    category: activeCat === "all" ? undefined : activeCat as Category,
+    query: searchQuery || undefined,
+    limit: 4,
+  });
+  const { data: nearbyData, isLoading: nearbyLoading } = useRecommendations({
+    category: activeCat === "all" ? undefined : activeCat as Category,
+    query: searchQuery || undefined,
+    city: "Kampala",
+    limit: 4,
+  });
+  const { data: relatedData, isLoading: relatedLoading } = useRecommendations({
+    category: activeCat === "all" ? undefined : activeCat as Category,
+    query: searchQuery || undefined,
+    limit: 4,
   });
 
   const SkeletonCard = () => (
@@ -296,6 +312,74 @@ export default function HomePage({ onNavigate, searchQuery }: Props) {
               ))}
             </div>
           )}
+        </section>
+
+        {/* ── SMART DISCOVERY ─────────────────────────────────────────────── */}
+        <section className="space-y-4">
+          <div className="cc-section-header">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-xl" style={{ background: "linear-gradient(135deg,#ede9fe,#ddd6fe)" }}>✨</div>
+              <h2 className="cc-section-title">Smart picks for you</h2>
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-3xl border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-black text-gray-900">Freshly added</p>
+                  <p className="text-xs text-gray-500">New listings that just arrived</p>
+                </div>
+                <span className="text-xs font-semibold text-purple-600">New</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {(freshLoading ? Array.from({ length: 4 }) : freshData ?? []).map((listing, index) => (
+                  <div key={listing?.id ?? index} className="rounded-2xl bg-white p-2.5 border border-purple-100">
+                    <div className="text-[11px] font-semibold text-purple-600 mb-1">{listing?.location?.city ?? "Near you"}</div>
+                    <div className="font-semibold text-sm text-gray-800 line-clamp-2">{listing?.title ?? "Loading..."}</div>
+                    <div className="text-xs text-gray-500 mt-1">UGX {listing?.price?.toLocaleString() ?? "—"}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-black text-gray-900">Popular near you</p>
+                  <p className="text-xs text-gray-500">Highly viewed listings in Kampala</p>
+                </div>
+                <span className="text-xs font-semibold text-emerald-600">Local</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {(nearbyLoading ? Array.from({ length: 4 }) : nearbyData ?? []).map((listing, index) => (
+                  <div key={listing?.id ?? index} className="rounded-2xl bg-white p-2.5 border border-emerald-100">
+                    <div className="text-[11px] font-semibold text-emerald-600 mb-1">{listing?.category ?? "Local"}</div>
+                    <div className="font-semibold text-sm text-gray-800 line-clamp-2">{listing?.title ?? "Loading..."}</div>
+                    <div className="text-xs text-gray-500 mt-1">{listing?.views ?? 0} views</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-gray-200 bg-white p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-sm font-black text-gray-900">Related to {activeCat === "all" ? "your browse" : activeCat}</p>
+                <p className="text-xs text-gray-500">Curated picks from the same category</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {(relatedLoading ? Array.from({ length: 4 }) : relatedData ?? []).map((listing, index) => (
+                <div key={listing?.id ?? index} className="rounded-2xl border border-gray-100 p-3 bg-gray-50">
+                  <div className="text-[11px] font-semibold text-gray-500 mb-1">{listing?.category ?? "Listing"}</div>
+                  <div className="font-semibold text-sm text-gray-800 line-clamp-2">{listing?.title ?? "Loading..."}</div>
+                  <div className="text-xs text-gray-500 mt-1">UGX {listing?.price?.toLocaleString() ?? "—"}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}

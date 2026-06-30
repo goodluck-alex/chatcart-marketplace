@@ -158,6 +158,11 @@ export const listingsApi = {
       params: { lat, lng, radiusKm, limit },
     }),
 
+  getRecommendations: (filters: { city?: string; category?: string; query?: string; limit?: number } = {}) =>
+    http.get<ApiResponse<Listing[]>>("/listings/recommendations", {
+      params: filters,
+    }),
+
   incrementView: (id: string) =>
     http.post<ApiResponse<void>>(`/listings/${id}/view`),
 

@@ -1,0 +1,32 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# Deploy: Render Dashboard → New → Blueprint → connect this repo.
+# Or fix an existing service: Settings → Root Directory → chatcart-backend
+
+services:
+  # NestJS API
+  - type: web
+    name: chatcart-api
+    runtime: node
+    rootDir: chatcart-backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+
+  # React frontend (optional — Cloudflare Pages is also fine)
+  - type: web
+    name: chatcart-frontend
+    runtime: static
+    rootDir: chatcart-frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_WS_URL
+        sync: false

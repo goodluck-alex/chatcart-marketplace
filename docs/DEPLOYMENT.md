@@ -145,7 +145,29 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ## 3. Backend Deployment (NestJS)
 
-### Option A: Railway (Recommended — Easiest)
+### Option A: Render
+
+This repo is a monorepo — **`package.json` is not at the root**. You must set the root directory in Render.
+
+**Quick fix (existing service):**
+
+1. Open your service in the [Render Dashboard](https://dashboard.render.com)
+2. Go to **Settings → Build & Deploy**
+3. Set **Root Directory** to `chatcart-backend`
+4. Set **Build Command** to `npm install && npm run build`
+5. Set **Start Command** to `npm run start:prod`
+6. Add your environment variables (copy from `chatcart-backend/.env.example`)
+7. **Manual Deploy → Deploy latest commit**
+
+**Or use the included Blueprint** (`render.yaml` at repo root):
+
+1. Render Dashboard → **New → Blueprint**
+2. Connect `goodluck-alex/chatcart`
+3. Render creates `chatcart-api` and `chatcart-frontend` with the correct root directories
+
+Health check URL: `https://your-service.onrender.com/v1/health`
+
+### Option B: Railway (Recommended — Easiest)
 
 1. Go to **https://railway.app** → Create project
 2. **Deploy from GitHub repo**
@@ -162,7 +184,7 @@ cd backend
 railway up
 ```
 
-### Option B: PM2 on VPS (Production-Grade)
+### Option C: PM2 on VPS (Production-Grade)
 
 ```bash
 # Install PM2 globally

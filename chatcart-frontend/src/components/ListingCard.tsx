@@ -63,6 +63,7 @@ export default function ListingCard({ listing, onView, compact }: ListingCardPro
     return { label: "For Sale", bg: "#ede9fe", color: "#6d28d9" };
   };
   const badge = getBadge();
+  const showSmartBadge = Boolean(listing.isSponsored || listing.isFeatured || listing.attributes?.aiSuggestedCategory);
 
   return (
     <div
@@ -103,6 +104,12 @@ export default function ListingCard({ listing, onView, compact }: ListingCardPro
           <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 text-[10px] font-black text-white px-2 py-1 rounded-full"
             style={{ background: "linear-gradient(135deg,#f59e0b,#f97316)" }}>
             <Zap className="w-2.5 h-2.5" /> FEATURED
+          </span>
+        )}
+
+        {showSmartBadge && (
+          <span className="absolute bottom-2.5 right-2.5 text-[10px] font-black text-white px-2 py-1 rounded-full" style={{ background: "rgba(109, 40, 217, 0.9)" }}>
+            Smart match
           </span>
         )}
 
